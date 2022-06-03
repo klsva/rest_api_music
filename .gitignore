@@ -9,3 +9,4 @@ logs
 npm-debug.log*
 package-lock.json
 task.txt
+.env
