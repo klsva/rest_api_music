@@ -1,11 +1,13 @@
+import { Op } from 'sequelize';
 import {Song} from './../db/models/models.js';
-import { ERR } from '../../error-types.js';
+import { ERR } from '../error-types.js';
 
 export default {
   //creates new song
   create: async (req, res, next) => {
     try {
-      const {title, authorId} = req.body;      
+      const {title, authorId} = req.body;
+      //TODO check 'if exist'  
       const song = await Song.create({title, authorId});
       return res.status(201).json(song);
     } catch (err) {
@@ -14,22 +16,27 @@ export default {
   },
 
   //gets list of songs
-  getAll: async (req, res) => {
+  getAll: async (req, res, next) => {
     try {
-      let {authorId, page, limit} = req.query;
+      let {authorId, title, createdAt, page, limit} = req.query;
       page = page || 1;
       limit = limit || 15;
       let offset = page * limit - limit;
       let songs;
-      if (!authorId) {
+      if (!authorId && !title && !createdAt) {
         songs = await Song.findAndCountAll({limit, offset});
       }
-      if (authorId) {
-        console.log(authorId);
+      if (authorId && !title && !createdAt) {
+        // query via ','
         const authorIdArr = authorId.split(',');
-        console.log(authorIdArr);
         songs = await Song.findAndCountAll({where:{authorId: authorIdArr}, limit, offset})
       }    
+      if (!authorId && title && !createdAt) {
+        songs = await Song.findAndCountAll({where:{title:{[Op.like]: `%${title}%`}}, limit, offset})
+      }
+      if (!authorId && !title && createdAt) {
+        songs = await Song.findAndCountAll({where:{createdAt}, limit, offset})
+      } 
       return res.status(200).json(songs);
     } catch (err) {
       next(ERR.BAD_REQUEST);
@@ -37,7 +44,7 @@ export default {
   },
 
   //gets the song
-  getOne: async (req, res) => {
+  getOne: async (req, res, next) => {
     try {
       const {id} = req.params;
       const song = await Song.findOne({where:{id}});
@@ -51,10 +58,10 @@ export default {
     update: async (req, res, next) => {
       try {
         const {id} = req.params;
-        const {name} = req.body;
-        const author = await Author.findOne({where:{id}});
-        await author.update({name});
-        return res.status(200).send('Author updated');
+        const {title} = req.body;
+        const song = await Song.findOne({where:{id}});
+        await song.update({title});
+        return res.status(200).send('Song updated');
       } catch (err) {
         next(ERR.CANNOT_UPDATE_SONG);
       }
@@ -64,12 +71,10 @@ export default {
     delete: async (req, res, next) => {
       try {
         const {id} = req.params;
-        await Author.destroy({where: {id}});
-        return res.status(200).send('Author deleted');
+        await Song.destroy({where: {id}});
+        return res.status(200).send('Song deleted');
       } catch (err) {
         next(ERR.CANNOT_DELETE_SONG)
       }
     }
 }
-
-

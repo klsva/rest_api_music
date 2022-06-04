@@ -1,11 +1,17 @@
+import { Op } from 'sequelize';
 import {Author} from './../db/models/models.js';
-import { ERR } from '../../error-types.js';
+import { ERR } from '../error-types.js';
+import { authorsException } from '../exceptions/authors.js';
 
 export default {
   //creates new author
-  create: async (req, res) => {
+  create: async (req, res, next) => {
     try {
       const { name } = req.body;
+      if (authorsException.includes(name.toUpperCase())) {
+        return res.status(200).send('You cannot add this Author');
+      }
+      //TODO check 'if exist'
       const author = await Author.create({name});
       return res.status(201).json(author);
     } catch (err) {
@@ -14,9 +20,22 @@ export default {
   },
 
   //gets list of authors
-  getAll: async (req, res) => {
+  getAll: async (req, res, next) => {
     try {
-      const authors = await Author.findAll();
+      let {name, createdAt, page, limit} = req.query;      
+      page = page || 1;
+      limit = limit || 15;
+      let offset = page * limit - limit;
+      let authors;
+      if (!name && !createdAt ) {
+        authors = await Author.findAndCountAll({limit, offset});
+      }
+      if (name && !createdAt) {
+        authors = await Author.findAndCountAll({where:{name:{[Op.like]: `%${name}%`}}, limit, offset});
+      }
+      if (!name && createdAt) {
+        authors = await Author.findAndCountAll({where:{createdAt}, limit, offset});        
+      }
       return res.status(200).json(authors);
     } catch (err) {
       next(ERR.BAD_REQUEST);
@@ -24,7 +43,7 @@ export default {
   },
 
   //gets the author
-  getOne: async (req, res) => {
+  getOne: async (req, res, next) => {
     try {
       const {id} = req.params;
       const author = await Author.findOne({where:{id}});
@@ -58,5 +77,3 @@ export default {
     }
   }
 }
-
-
