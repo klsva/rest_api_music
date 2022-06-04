@@ -11,7 +11,7 @@ const app = express();
 let server;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const accessLogStream = fs.createWriteStream(path.join(__dirname, '/logger/access.log'), { flags: 'a' })
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
