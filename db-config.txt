@@ -1,4 +1,4 @@
-USER_DB = user
-HOST = host
-DATABASE = database
-PASSWORD = password
+USER_DB = postgress
+HOST = postgress
+DATABASE = postgress
+PASSWORD = postgress
