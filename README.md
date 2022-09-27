@@ -1,6 +1,6 @@
 ## Project Description
 API for working with the music catalog.
-Technologies used: NodeJS, Express, PostgreSQL, Sequelize.
+Technologies: NodeJS, Express, PostgreSQL, Sequelize.
 
 Main features:
 - Create, read, edit, delete artist.
